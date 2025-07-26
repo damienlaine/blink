@@ -1,0 +1,44 @@
+{
+  "video": {
+    "width": 640,
+    "height": 480,
+    "frameRate": {
+      "ideal": 120,
+      "max": 240
+    }
+  },
+  "faceTracking": {
+    "smoothingFrames": 1,
+    "headLock": {
+      "maxRoll": 30,
+      "yawRatio": 3.0,
+      "minPitch": 0.25,
+      "maxPitch": 0.65
+    }
+  },
+  "blinkDetection": {
+    "thresholdOpen": 0.4,
+    "thresholdReopen": 0.2,
+    "debounceMs": 300,
+    "minDurationMs": 100
+  },
+  "headDirection": {
+    "verticalSensitivity": 2.5
+  },
+  "ui": {
+    "vector": {
+      "minEpsilon": 20,
+      "headLengthFactor": 0.3,
+      "minHeadLength": 30,
+      "maxHeadLength": 60,
+      "coneRadiusFactor": 0.5,
+      "lineWidth": 12,
+      "color": "rgba(0, 255, 0, 0.8)"
+    },
+    "eyes": {
+      "eyeRadiusFactor": 0.1,
+      "pupilRadiusFactor": 0.4,
+      "eyeSpacingFactor": 1.2
+    }
+  }
+}
