@@ -1,4 +1,6 @@
-import { drawVector, drawEyes, drawCenteredCircle } from './drawing.js';
+import * as THREE from 'three';
+import { Avatar } from './avatar.js';
+import { drawVector, drawEyes } from './drawing.js';
 
 export class UIController extends EventTarget {
     constructor(config) {
@@ -11,7 +13,8 @@ export class UIController extends EventTarget {
             videoContainer: document.getElementById('video-container'),
             video: document.getElementById('video'),
             landmarksCanvas: document.getElementById('landmarks-canvas'),
-            stage: document.getElementById('stage'),
+            stage2d: document.getElementById('stage-2d'),
+            stage3d: document.getElementById('stage-3d'),
             log: document.getElementById('log'),
             lockIndicator: document.getElementById('lock-indicator'),
             facelostIndicator: document.getElementById('facelost-indicator'),
@@ -26,10 +29,31 @@ export class UIController extends EventTarget {
             }
         };
 
-        this.stageCtx = this.dom.stage.getContext('2d');
-        this.resizeCanvas();
-        
+        // 2D Canvas setup
+        this.stage2dCtx = this.dom.stage2d.getContext('2d');
+
+        // 3D Scene setup
+        this.scene = new THREE.Scene();
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(0, 1, 1);
+        this.scene.add(directionalLight);
+
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
+        this.camera.position.z = 10;
+        this.renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            canvas: this.dom.stage3d
+        });
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+
+        this.avatar = new Avatar(this.scene);
+        this.avatar.load().catch(console.error);
+
         this.initEventListeners();
+        this.resizeCanvas();
+        this.render();
     }
 
     initEventListeners() {
@@ -57,8 +81,15 @@ export class UIController extends EventTarget {
     }
 
     resizeCanvas() {
-        this.dom.stage.width = window.innerWidth;
-        this.dom.stage.height = window.innerHeight;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        this.dom.stage2d.width = w;
+        this.dom.stage2d.height = h;
+
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(w, h);
     }
 
     setStatus(text) {
@@ -104,16 +135,58 @@ export class UIController extends EventTarget {
     }
 
     clearStage() {
-        this.stageCtx.clearRect(0, 0, this.dom.stage.width, this.dom.stage.height);
+        this.stage2dCtx.clearRect(0, 0, this.dom.stage2d.width, this.dom.stage2d.height);
+        for (let i = this.scene.children.length - 1; i >= 0; i--) {
+            const child = this.scene.children[i];
+            if (child.isMesh) {
+                this.scene.remove(child);
+            }
+        }
     }
 
-    drawHeadDirection({ targetX, targetY }) {
-        this.clearStage();
+    render() {
+        this.renderer.render(this.scene, this.camera);
+        requestAnimationFrame(() => this.render());
+    }
+
+    drawHeadDirection({ targetX, targetY, depth, normalized }) {
+        if (!this.avatar.gltf) return;
+
         const mode = this.getRenderMode();
-        if (mode === 'vector') {
-            drawVector(this.stageCtx, this.dom.stage, targetX, targetY, this.config.vector);
-        } else if (mode === 'eyes') {
-            drawEyes(this.stageCtx, this.dom.stage, targetX, targetY, this.config.eyes);
+
+        // Clear canvases
+        this.stage2dCtx.clearRect(0, 0, this.dom.stage2d.width, this.dom.stage2d.height);
+        for (let i = this.scene.children.length - 1; i >= 0; i--) {
+            const child = this.scene.children[i];
+            if (child.isMesh && child !== this.avatar.gltf.scene) {
+                this.scene.remove(child);
+            }
+        }
+
+        this.avatar.gltf.scene.visible = (mode === 'tanuki');
+
+        switch (mode) {
+            case 'vector':
+                drawVector(this.stage2dCtx, this.dom.stage2d, (1 - normalized.x) * this.dom.stage2d.width, normalized.y * this.dom.stage2d.height, this.config.vector);
+                break;
+            case 'eyes':
+                drawEyes(this.stage2dCtx, this.dom.stage2d, (1 - normalized.x) * this.dom.stage2d.width, normalized.y * this.dom.stage2d.height, this.config.eyes);
+                break;
+            case 'sphere':
+                {
+                    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                    const sphere = new THREE.Mesh(geometry, material);
+                    sphere.position.set(targetX, targetY, depth);
+                    this.scene.add(sphere);
+                }
+                break;
+            case 'tanuki':
+                {
+                    const target = new THREE.Vector3(targetX, targetY, depth);
+                    this.avatar.updateEyeGaze(target);
+                }
+                break;
         }
     }
 }

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import {
     FaceLandmarker,
     FilesetResolver
@@ -91,13 +92,14 @@ export class FaceTracker extends EventTarget {
     }
 
     isHeadLocked(result) {
-        // This check is now redundant as processResult ensures landmarks exist
         const lm = result.faceLandmarks[0];
         const cfg = this.trackingConfig.headLock;
 
         // Roll
         const L = lm[33], R = lm[263];
-        const roll = Math.atan2(R.y - L.y, R.x - L.x) * 180 / Math.PI;
+        const p1 = new THREE.Vector3(L.x, L.y, L.z);
+        const p2 = new THREE.Vector3(R.x, R.y, R.z);
+        const roll = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
         if (Math.abs(roll) > cfg.maxRoll) return true;
 
         // Yaw

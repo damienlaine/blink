@@ -1,12 +1,13 @@
+import { getViewportSizeAtDepth } from './camera-utils.js';
+
 export class HeadDirection extends EventTarget {
-    constructor(config) {
+    constructor(config, camera) {
         super();
         this.config = config;
-        this.canvas = document.getElementById('stage'); // Used for dimensions
+        this.camera = camera;
     }
 
     process(result) {
-        // This module now assumes a face is present, as the check is done upstream.
         const landmarks = result.faceLandmarks[0];
 
         let minX = 1, maxX = 0, minY = 1, maxY = 0;
@@ -19,17 +20,21 @@ export class HeadDirection extends EventTarget {
         const faceCenterX_normalized = (minX + maxX) / 2;
         const faceCenterY_normalized = (minY + maxY) / 2;
 
-        const targetX = (1 - faceCenterX_normalized) * this.canvas.width;
+        // The target plane is placed in front of the avatar.
+        // Avatar is at z=0, camera is at z=10. Let's place the plane at z=-20.
+        // The depth from the camera is camera.z - target.z = 10 - (-20) = 30.
+        const depth = 30;
+        const viewportSize = getViewportSizeAtDepth(this.camera, depth);
 
-        const originY = this.canvas.height / 2;
-        const neutralY = 0.5;
-        const deltaY = faceCenterY_normalized - neutralY;
-        const targetY = originY + (deltaY * this.canvas.height * this.config.verticalSensitivity);
+        // The video is mirrored, so we need to invert the x-axis.
+        const targetX = (0.5 - faceCenterX_normalized) * viewportSize.width;
+        const targetY = -(faceCenterY_normalized - 0.5) * viewportSize.height;
 
         this.dispatchEvent(new CustomEvent('direction', {
             detail: {
                 targetX,
                 targetY,
+                depth: -20, // The z-coordinate of the target plane
                 normalized: {
                     x: faceCenterX_normalized,
                     y: faceCenterY_normalized

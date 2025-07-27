@@ -9,7 +9,7 @@ async function main() {
     const ui = new UIController(config.ui);
     const faceTracker = new FaceTracker(config.video, config.faceTracking);
     const blinkDetector = new BlinkDetector(config.blinkDetection);
-    const headDirection = new HeadDirection(config.headDirection);
+    const headDirection = new HeadDirection(config.headDirection, ui.camera);
 
     // --- Event Wiring ---
 
@@ -44,9 +44,20 @@ async function main() {
         }
     });
 
+    const initialScale = 5;
+    const maxScale = 10;
+    const totalBlinks = 50;
+    let blinkCount = 0;
+
     blinkDetector.addEventListener('blink.start', () => {
         ui.showBlink(true);
         requestAnimationFrame(() => ui.showBlink(false));
+
+        if (blinkCount < totalBlinks) {
+            blinkCount++;
+            const newScale = initialScale + (maxScale - initialScale) * (blinkCount / totalBlinks);
+            ui.avatar.setScale(newScale);
+        }
     });
 
     blinkDetector.addEventListener('blink.end', (e) => {

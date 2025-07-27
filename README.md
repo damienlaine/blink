@@ -18,3 +18,13 @@
 [4]: https://github.com/theankurkedia/blink-detection "GitHub - theankurkedia/blink-detection: Detect the user's blink and wink using machine learning"
 [5]: https://github.com/mirrory-dev/eyeblink "GitHub - mirrory-dev/eyeblink: A lightweight eyeblink detection model for TensorFlow.js."
 [6]: https://openaccess.thecvf.com/content/WACV2024/papers/Hong_Robust_Eye_Blink_Detection_Using_Dual_Embedding_Video_Vision_Transformer_WACV_2024_paper.pdf "Robust Eye Blink Detection Using Dual Embedding Video Vision Transformer"
+
+
+# 3D Srouces
+
+![alt text](image.png)
+
+https://codepen.io/mediapipe-preview/pen/oNPKmEy
+
+- FOV camera examples using three.js
+- Used racoon model from this exemple to draw a 3D avatar growing on blink

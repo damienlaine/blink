@@ -13,12 +13,18 @@
       font-family: system-ui, sans-serif;
       color: #fff;
     }
-    #stage {
+    #stage-2d, #stage-3d {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
       background: transparent;
+    }
+    #stage-2d {
+      z-index: 2;
+    }
+    #stage-3d {
+      z-index: 1;
     }
     #video-container {
       position: absolute;
@@ -117,8 +123,9 @@
     <canvas id="landmarks-canvas"></canvas>
   </div>
 
-  <!-- Main drawing canvas -->
-  <canvas id="stage"></canvas>
+  <!-- Main drawing canvases -->
+  <canvas id="stage-3d"></canvas>
+  <canvas id="stage-2d"></canvas>
 
   <!-- UI Controls -->
     <div id="ui">
@@ -136,8 +143,10 @@
     </div>
     <div class="controls-group" id="head-controls">
       <span>Render mode (head):</span>
-      <label><input type="radio" name="renderMode" value="vector" /> Vector</label>
-      <label><input type="radio" name="renderMode" value="eyes" checked /> Eyes (xeyes)</label>
+      <label><input type="radio" name="renderMode" value="vector" /> 2D Vector</label>
+      <label><input type="radio" name="renderMode" value="eyes" checked /> 2D Eyes (xeyes)</label>
+      <label><input type="radio" name="renderMode" value="sphere" /> 3D Sphere</label>
+      <label><input type="radio" name="renderMode" value="tanuki" /> 3D Tanuki</label>
     </div>
   </div>
 
@@ -149,6 +158,14 @@
   <div id="facelost-indicator">FACE LOST</div>
   <div id="blink-overlay"></div>
 
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/"
+      }
+    }
+  </script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
